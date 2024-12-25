@@ -1,6 +1,6 @@
 import React from "react";
 import {dashboard, home, notification} from "../assets/icons"
-import Profile from "./ProfileDropdown";
+import ProfileDropdown from "./ProfileDropdown";
 import { Link } from 'react-router-dom'
 const Navbar = () => {
   return (
@@ -24,7 +24,7 @@ const Navbar = () => {
               <Link to="/Dashboard"><img src={dashboard} width={30} height={30} /></Link>
             </li>
           <li className="pr-4 py-2">
-           <Profile />
+           <ProfileDropdown />
           </li>
           </ul>
         </nav>

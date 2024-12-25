@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { pItems } from '../content'
 import { profile } from '../assets/icons'
 import { Link } from 'react-router-dom'
-const Profile = () => {
+const ProfileDropdown = () => {
 
 const [isopen, setIsopen]=useState(false)
 
@@ -39,4 +39,4 @@ const toggleDropdown =()=>setIsopen(!isopen)
   )
 }
 
-export default Profile
+export default ProfileDropdown
