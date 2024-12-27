@@ -2,27 +2,29 @@ import './App.css'
 import Navbar from './Components/Navbar'
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Userprofile from './page/Userprofile';
+import {ProfileProvider}  from './contextreact/ProfileContext';
+import UserDashboard from './page/UserDashboard';
 function App() {
 
 
   return (
-    <>
-      <div className="App">
+    
+    <ProfileProvider>
+    <div className="App">
         <Router>
           <Navbar />
-          <div className="container ">
             <Routes>
-              {/* <Route exact path="/" element={<Home />} />
-              <Route exact path="/home" element={<Home />} />
-              <Route exact path="/about" element={<About />} />
-              <Route exact path="/login" element={<Login />} /> */}
               <Route exact path="/profile" element={<Userprofile />} />
+              
+
+              <Route exact path="/dashboard" element={<UserDashboard />} />
+             
             </Routes>
-          </div>
         </Router>
       </div>
 
-    </>
+
+</ProfileProvider>
   )
 }
 

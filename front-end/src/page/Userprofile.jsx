@@ -1,5 +1,5 @@
 import React from 'react';
-import { profile } from "../assets/icons";
+// import { profile } from "../assets/icons";
 import Avater from '../Components/Avater';
 
 const Userprofile = () => {
