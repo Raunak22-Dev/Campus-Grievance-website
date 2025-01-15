@@ -1,11 +1,12 @@
 import React, { useState, useRef } from "react";
-import { profile } from '../assets/icons'; // Assuming profile is the default image
+import { useProfile } from "../contextreact/ProfileContext";
 
 const AvatarUpload = () => {
   const [file, setFile] = useState(null); // Store selected file
-  const [preview, setPreview] = useState(""); // Image preview URL
-  const [profilePic, setProfilePic] = useState(profile); // Initial profile picture is the default image
-  const fileInputRef = useRef(null); // Reference to file input for programmatic clicking
+  const [preview, setPreview] = useState(""); // Temporary preview for new file
+  const [isSaved, setIsSaved] = useState(true); // Track save status
+  const { avatar, updateAvatar } = useProfile(); // Use shared avatar from context
+  const fileInputRef = useRef(null); // Reference for file input
 
   const handleChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -14,31 +15,31 @@ const AvatarUpload = () => {
     // Create a preview URL for the selected file
     const objectUrl = URL.createObjectURL(selectedFile);
     setPreview(objectUrl);
-
-    // Immediately set profilePic to the selected image (to directly show it)
-    setProfilePic(objectUrl);
+    setIsSaved(false); // Mark as unsaved since the picture is updated
   };
 
   const handleSave = () => {
-    alert("Profile picture saved successfully!");
-    // Handle saving functionality (e.g., API upload)
+    if (file) {
+      updateAvatar(preview); // Update avatar in the global state
+      setIsSaved(true); // Mark as saved
+     
+    }
   };
 
   const handleEdit = () => {
-    // Trigger file input click to choose a new profile picture
     if (fileInputRef.current) {
-      fileInputRef.current.click();
+      fileInputRef.current.click(); // Trigger file input click
     }
   };
 
   return (
     <div className="flex flex-col items-center py-8 space-y-4">
-      <h2 className="text-lg   font-semibold text-gray-800">Profile Picture</h2>
+      <h2 className="text-lg font-semibold text-gray-800">Profile Picture</h2>
 
-      {/* Display the current profile picture if it exists */}
+      {/* Display the current or previewed profile picture */}
       <div className="flex flex-col items-center">
         <img
-          src={profilePic}
+          src={isSaved ? avatar : preview}
           alt="Profile"
           className="w-48 h-48 object-cover rounded-full border-4 border-gray-200"
         />
@@ -49,25 +50,25 @@ const AvatarUpload = () => {
         type="file"
         accept="image/*"
         onChange={handleChange}
-        className="hidden" // Hide the actual input
-        ref={fileInputRef} // Reference for programmatic control
+        className="hidden"
+        ref={fileInputRef}
       />
 
-      {/* Edit or Save button */}
+      {/* Conditional rendering of Edit and Save buttons */}
       <div className="mt-6 space-x-4">
-        {profilePic && profilePic !== profile ? (
-          <button
-            onClick={handleSave}
-            className="px-6 py-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition duration-300 ease-in-out"
-          >
-            Save Profile Picture
-          </button>
-        ) : (
+        {isSaved ? (
           <button
             onClick={handleEdit}
             className="px-6 py-3 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition duration-300 ease-in-out"
           >
             Edit Profile Picture
+          </button>
+        ) : (
+          <button
+            onClick={handleSave}
+            className="px-6 py-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition duration-300 ease-in-out"
+          >
+            Save Profile Picture
           </button>
         )}
       </div>

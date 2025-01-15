@@ -10,55 +10,71 @@ const ComplaintForm = ({ addComplaint }) => {
   const [messageType, setMessageType] = useState('public');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
-   const [taskSrNo, setTaskSrNo] = useState(1);
-  
-   
+  const [taskSrNo, setTaskSrNo] = useState(1);
+
   // Handle changes
   const handleComplaintChange = (e) => setComplaint(e.target.value);
   const handleSelectChange = (setter) => (e) => setter(e.target.value);
 
+  // Format Date and Time
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+
+    const dateOptions = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    };
+
+    const timeOptions = {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    };
+
+    const formattedDate = date.toLocaleDateString('en-US', dateOptions);
+    const formattedTime = date.toLocaleTimeString('en-US', timeOptions);
+
+    return `Date: ${formattedDate} | Time: ${formattedTime}`;
+  };
+
   // Handle submit complaint
   const handleComplaintSubmit = () => {
-    // Validate that all required fields are filled
     if (!complaint.trim() || !complaintTo || !complainType) {
       setError("Please fill all fields.");
       return;
     }
-  
-    // Increment task serial number (taskSrNo) if within the valid range (1-10)
+
     if (taskSrNo >= 1 && taskSrNo <= 20) {
-      const sr = taskSrNo + 1;  // Increment task serial number by 1
-      setTaskSrNo(sr);           // Set the new task serial number
+      const sr = taskSrNo + 1;
+      setTaskSrNo(sr);
     } else {
       setError("Maximum task serial number reached.");
       return;
     }
-  
-    // Clear any previous error
+
     setError('');
-  
-    // Prepare new complaint data
+
+    const createdAt = formatDateTime(new Date().toISOString());
+
     const newComplaint = {
-      sr :taskSrNo,
+      sr: taskSrNo,
       message: complaint,
       recipient: complaintTo,
       type: complainType,
-      status: 'Pending', // Default to "Pending"
+      status: 'Pending',
+      createdAt,
     };
-  
-    // Assuming addComplaint is a function that saves or handles the complaint
+
     addComplaint(newComplaint);
-  
-    // Mark the submission as successful
+
     setIsSubmitted(true);
-  
-    // Reset form fields after submission
+
     setComplaint('');
     setComplaintTo('');
     setComplainType('');
-    setMessageType('public'); // Resetting the type to default
+    setMessageType('public');
   };
-  
 
   return (
     <div className="mt-10 bg-white shadow-xl rounded-lg p-6">
@@ -80,7 +96,6 @@ const ComplaintForm = ({ addComplaint }) => {
             <option value="staff">Staff</option>
           </select>
         </li>
-        {/* HOD and Staff-specific options */}
         {complaintTo === 'hod' && (
           <li className="bg-gray-100 p-3 rounded-md">
             <label htmlFor="department" className="font-medium">Select Department</label>

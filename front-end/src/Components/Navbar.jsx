@@ -9,16 +9,16 @@ const Navbar = () => {
       <nav className="bg-gray-100 shadow-md p-3 h-16 flex justify-between items-center">
 
 
-      <Link to="/" className="px-4">
+      <Link to="/home" className="px-4">
             <img src="" alt="" /> Campus Grievance
           </Link>
 
           <ul className="flex flex-1 items-center gap-8 justify-end  ">
             <li>
-              <Link to="/"><img src={home} alt="" width={30} height={30} /></Link>
+              <Link to="/home"><img src={home} title="home" alt="" width={30} height={30} /></Link>
             </li>
             <li>
-              <Link to="/Notification"><img src={notification} alt="" width={30} height={30} /></Link>
+              <Link to="/Notification"><img src={notification}  title="notification"  alt="" width={30} height={30} /></Link>
             </li>
             <li>
               <Link to="/Dashboard"><img src={dashboard} width={30} height={30} /></Link>
