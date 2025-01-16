@@ -1,79 +1,76 @@
 import React, { useState } from 'react';
+import { useComplaintContext } from '../../contextreact/ComplaintContext';
 
 // Complaint Form Component
-const ComplaintForm = ({ addComplaint }) => {
+const ComplaintForm = () => {
   const [complaint, setComplaint] = useState('');
   const [complaintTo, setComplaintTo] = useState('');
   const [department, setDepartment] = useState('');
   const [staffName, setStaffName] = useState('');
   const [complainType, setComplainType] = useState('');
   const [messageType, setMessageType] = useState('public');
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
-  const [taskSrNo, setTaskSrNo] = useState(1);
+  const [taskSrNo, setTaskSrNo] = useState(1); // Serial number is starting at 1
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Handle changes
-  const handleComplaintChange = (e) => setComplaint(e.target.value);
-  const handleSelectChange = (setter) => (e) => setter(e.target.value);
+  const { addComplaint } = useComplaintContext(); 
+
+  // Helper to handle input changes
+  const handleInputChange = (setter) => (e) => setter(e.target.value);
 
   // Format Date and Time
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
-
-    const dateOptions = {
+    const formattedDate = date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
-    };
-
-    const timeOptions = {
+    });
+    const formattedTime = date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
-    };
-
-    const formattedDate = date.toLocaleDateString('en-US', dateOptions);
-    const formattedTime = date.toLocaleTimeString('en-US', timeOptions);
-
+    });
     return `Date: ${formattedDate} | Time: ${formattedTime}`;
   };
 
   // Handle submit complaint
   const handleComplaintSubmit = () => {
+    // Form validation
     if (!complaint.trim() || !complaintTo || !complainType) {
-      setError("Please fill all fields.");
+      setError('Please fill all fields.');
       return;
     }
 
     if (taskSrNo >= 1 && taskSrNo <= 20) {
-      const sr = taskSrNo + 1;
-      setTaskSrNo(sr);
+      setTaskSrNo((prev) => prev + 1); // Increment normally by 1 for each task
     } else {
-      setError("Maximum task serial number reached.");
+      setError('Maximum task serial number reached.');
       return;
     }
 
-    setError('');
-
-    const createdAt = formatDateTime(new Date().toISOString());
-
+    setError(''); // Reset error message on valid submission
+    
     const newComplaint = {
       sr: taskSrNo,
       message: complaint,
       recipient: complaintTo,
       type: complainType,
       status: 'Pending',
-      createdAt,
+      createdAt: formatDateTime(new Date().toISOString()),
     };
 
+    // Add new complaint to context
     addComplaint(newComplaint);
+    setIsSubmitted(true); // After submission, show success message
 
-    setIsSubmitted(true);
-
+    // Reset form fields after submission
     setComplaint('');
     setComplaintTo('');
     setComplainType('');
     setMessageType('public');
+    setDepartment('');
+    setStaffName('');
   };
 
   return (
@@ -86,7 +83,7 @@ const ComplaintForm = ({ addComplaint }) => {
           <select
             id="complainTo"
             value={complaintTo}
-            onChange={handleSelectChange(setComplaintTo)}
+            onChange={handleInputChange(setComplaintTo)}
             className="w-full p-2 border-2 border-gray-300 rounded-md"
           >
             <option value="">Select</option>
@@ -96,13 +93,14 @@ const ComplaintForm = ({ addComplaint }) => {
             <option value="staff">Staff</option>
           </select>
         </li>
+
         {complaintTo === 'hod' && (
           <li className="bg-gray-100 p-3 rounded-md">
             <label htmlFor="department" className="font-medium">Select Department</label>
             <select
               id="department"
               value={department}
-              onChange={handleSelectChange(setDepartment)}
+              onChange={handleInputChange(setDepartment)}
               className="w-full p-2 border-2 border-gray-300 rounded-md"
             >
               <option value="">Select</option>
@@ -113,6 +111,7 @@ const ComplaintForm = ({ addComplaint }) => {
             </select>
           </li>
         )}
+        
         {complaintTo === 'staff' && (
           <li className="bg-gray-100 p-3 rounded-md">
             <label htmlFor="staffName" className="font-medium">Staff Name</label>
@@ -120,18 +119,19 @@ const ComplaintForm = ({ addComplaint }) => {
               id="staffName"
               type="text"
               value={staffName}
-              onChange={(e) => setStaffName(e.target.value)}
+              onChange={handleInputChange(setStaffName)}
               placeholder="Enter Staff Name"
               className="w-full p-2 border border-gray-300 rounded-md"
             />
           </li>
         )}
+
         <li className="bg-gray-100 p-3 rounded-md">
           <label htmlFor="complainType" className="font-medium">Related To</label>
           <select
             id="complainType"
             value={complainType}
-            onChange={handleSelectChange(setComplainType)}
+            onChange={handleInputChange(setComplainType)}
             className="w-full p-2 border-2 border-gray-300 rounded-md"
           >
             <option value="">Select</option>
@@ -145,7 +145,7 @@ const ComplaintForm = ({ addComplaint }) => {
           <select
             id="messageType"
             value={messageType}
-            onChange={handleSelectChange(setMessageType)}
+            onChange={handleInputChange(setMessageType)}
             className="w-full p-2 border-2 border-gray-300 rounded-md"
           >
             <option value="public">Public</option>
@@ -158,7 +158,7 @@ const ComplaintForm = ({ addComplaint }) => {
           <textarea
             id="complaintMessage"
             value={complaint}
-            onChange={handleComplaintChange}
+            onChange={handleInputChange(setComplaint)}
             placeholder="Describe your complaint or issue here..."
             className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 mb-4"
             rows="4"

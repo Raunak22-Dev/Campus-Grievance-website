@@ -7,6 +7,7 @@ import UserDashboard from './page/UserDashboard';
 import StartingPage from './page/StartingPage';
 // import LoginPage from './page/LoginPage';
 import HomePage from './page/HomePage';
+import { ComplaintProvider } from './contextreact/ComplaintContext';
 
 function App() {
   // Custom Layout Wrapper
@@ -27,6 +28,8 @@ function App() {
 
   return (
     <ProfileProvider>
+    <ComplaintProvider>
+
       <Router>
         <Layout>
           <Routes>
@@ -39,6 +42,7 @@ function App() {
           </Routes>
         </Layout>
       </Router>
+    </ComplaintProvider>
     </ProfileProvider>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const UpdateForm = ({
   selectedTask,
@@ -21,6 +21,19 @@ const UpdateForm = ({
     setFormVisible(false); // Close the form when Cancel is clicked
   };
 
+  useEffect(() => {
+    // Reset fields in case selectedTask changes
+    if (selectedTask) {
+      setUpdatedMessage(selectedTask.message || '');
+      setComplaintTo(selectedTask.complaintTo || '');
+      setComplaintType(selectedTask.complaintType || '');
+      setDepartment(selectedTask.department || '');
+      setStaffName(selectedTask.staffName || '');
+      setRecipient(selectedTask.recipient || '');
+      setType(selectedTask.type || '');
+    }
+  }, [selectedTask]); // Rerun when selectedTask changes
+
   // Validate and update
   const handleUpdateSubmit = () => {
     if (updatedMessage.trim().length < 10) {
@@ -31,7 +44,7 @@ const UpdateForm = ({
     setError(''); // Clear error message
 
     // Pass all updated fields and notify parent
-    handleUpdate({
+    const updatedTask = {
       ...selectedTask,
       message: updatedMessage,
       complaintTo,
@@ -40,8 +53,9 @@ const UpdateForm = ({
       type,
       department: complaintTo === 'hod' ? department : '', // Update department if complaintTo is HOD
       staffName: complaintTo === 'staff' ? staffName : '', // Update staff if complaintTo is staff
-    });
+    };
 
+    handleUpdate(updatedTask); // Trigger update in the parent
     closeForm(); // Close form after submission
   };
 
@@ -143,10 +157,7 @@ const UpdateForm = ({
             Update Complaint
           </button>
           <button
-              onClick={() => {
-    
-    closeForm();
-  }}
+            onClick={closeForm}
             className="bg-gray-500 text-white py-2 px-6 rounded-lg hover:bg-gray-600 transition"
           >
             Cancel
