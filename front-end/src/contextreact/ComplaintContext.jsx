@@ -12,8 +12,17 @@ export const ComplaintProvider = ({ children }) => {
     setComplaints((prevComplaints) => [...prevComplaints, complaint]);
   };
 
+  // Function to update an existing complaint
+  const updateComplaint = (updatedComplaint) => {
+    setComplaints((prevComplaints) =>
+      prevComplaints.map((complaint) =>
+        complaint.id === updatedComplaint.id ? updatedComplaint : complaint
+      )
+    );
+  };
+
   return (
-    <ComplaintContext.Provider value={{ complaints, setComplaints, addComplaint }}>
+    <ComplaintContext.Provider value={{ complaints, setComplaints, addComplaint, updateComplaint }}>
       {children}
     </ComplaintContext.Provider>
   );

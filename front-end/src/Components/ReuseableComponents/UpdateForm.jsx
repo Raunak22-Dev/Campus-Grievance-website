@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useComplaintContext } from '../../contextreact/ComplaintContext'; // Import the custom hook to access the context
 
-const UpdateForm = ({
-  selectedTask,
-  handleUpdate,
-  departments,
-  staffMembers,
-}) => {
+const UpdateForm = ({ selectedTask, departments, staffMembers }) => {
   // Default state based on selectedTask
   const [updatedMessage, setUpdatedMessage] = useState(selectedTask?.message || '');
   const [complaintTo, setComplaintTo] = useState(selectedTask?.complaintTo || '');
@@ -16,6 +12,9 @@ const UpdateForm = ({
   const [type, setType] = useState(selectedTask?.type || ''); // Default to existing type
   const [error, setError] = useState('');
   const [formVisible, setFormVisible] = useState(true); // Handle visibility of the form
+
+  // Access the context function for updating a complaint
+  const { updateComplaint } = useComplaintContext();
 
   const closeForm = () => {
     setFormVisible(false); // Close the form when Cancel is clicked
@@ -43,7 +42,7 @@ const UpdateForm = ({
 
     setError(''); // Clear error message
 
-    // Pass all updated fields and notify parent
+    // Pass all updated fields and update task
     const updatedTask = {
       ...selectedTask,
       message: updatedMessage,
@@ -55,11 +54,10 @@ const UpdateForm = ({
       staffName: complaintTo === 'staff' ? staffName : '', // Update staff if complaintTo is staff
     };
 
-    handleUpdate(updatedTask); // Trigger update in the parent
+    updateComplaint(updatedTask); // Trigger update from context
     closeForm(); // Close form after submission
   };
 
-  // Conditionally render form if it's visible
   if (!formVisible) return null;
 
   return (

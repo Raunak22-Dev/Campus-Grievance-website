@@ -8,8 +8,9 @@ const Status = () => {
   const [currentStatus, setCurrentStatus] = useState("Pending");
   const [showForm, setShowForm] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [selectedTaskIndex, setSelectedTaskIndex] = useState(null);
-  const { complaints, setComplaints } = useComplaintContext(); // add setComplaints to context if not available
+  const [selectedTaskId, setSelectedTaskId] = useState(null);  // Change to store the task ID
+
+  const { complaints, setComplaints } = useComplaintContext();
 
   // Open the form/modal and set the current status
   const openForm = (status) => {
@@ -20,15 +21,13 @@ const Status = () => {
   // Close the form/modal and reset state
   const closeForm = () => {
     setShowForm(false);
-    setSelectedTaskIndex(null);
+    setSelectedTaskId(null);
   };
 
   // Delete a complaint
-// In the Status Component
-const handleDelete = (id) => {
-  setComplaints(complaints.filter((task) => task.sr !== id)); // filtering the task out
-};
-  
+  const handleDelete = (id) => {
+    setComplaints(complaints.filter((task) => task.sr !== id));
+  };
 
   // Filter tasks by status
   const getTasksByStatus = () =>
@@ -49,7 +48,7 @@ const handleDelete = (id) => {
   // Simulate loading more tasks
   const loadMoreTasks = () => {
     if (complaints.length < 20) {
-      const moreTasks = [] // add logic to fetch new tasks here
+      const moreTasks = []; // add logic to fetch new tasks here
       setComplaints([...complaints, ...moreTasks]);
     } else {
       setHasMore(false);
@@ -77,7 +76,7 @@ const handleDelete = (id) => {
               <ul className="pl-5 space-y-4">
                 {getTasksDisplayStatus().length > 0 ? (
                   getTasksDisplayStatus().map((task) => (
-                    <li key={task.id}>
+                    <li key={task.sr}>
                       <div>
                         <span className="text-lg mr-2">{task.sr}.</span>
                         {truncateMessage(task.message, 50)}
@@ -101,10 +100,8 @@ const handleDelete = (id) => {
       {showForm && (
         <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full h-[400px] flex flex-col relative">
-            {/* Modal Header */}
             <h2 className="text-2xl font-bold mb-4">{currentStatus} Tasks</h2>
 
-            {/* Task List with Infinite Scroll */}
             <div className="flex-1 overflow-y-auto mb-4">
               <InfiniteScroll
                 dataLength={getTasksByStatus().length}
@@ -124,18 +121,17 @@ const handleDelete = (id) => {
                       </div>
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => setSelectedTaskIndex(task.id)}
+                          onClick={() => setSelectedTaskId(task.sr)}  // Update with task ID
                           className="bg-blue-400 text-white px-2 py-1 rounded hover:bg-blue-500"
                         >
                           Update
                         </button>
                         <button
-  onClick={() => handleDelete(task.sr)} // Ensure `task.sr` matches the actual identifier
-  className="text-red-500 hover:text-red-700"
->
-  Delete
-</button>
-
+                          onClick={() => handleDelete(task.sr)} // Use task.sr for deletion
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </li>
                   ))}
@@ -144,15 +140,15 @@ const handleDelete = (id) => {
             </div>
 
             {/* Update Form */}
-            {selectedTaskIndex !== null && (
+            {selectedTaskId && (
               <UpdateForm
-                selectedTask={complaints[selectedTaskIndex]}
+                selectedTask={complaints.find((task) => task.sr === selectedTaskId)}
                 handleUpdate={(updatedTask) => {
-                  const updatedComplaints = complaints.map((task, i) =>
-                    i === selectedTaskIndex ? updatedTask : task
+                  const updatedComplaints = complaints.map((task) =>
+                    task.sr === selectedTaskId ? updatedTask : task
                   );
                   setComplaints(updatedComplaints);
-                  setSelectedTaskIndex(null);
+                  setSelectedTaskId(null);
                 }}
                 closeForm={closeForm}
               />
