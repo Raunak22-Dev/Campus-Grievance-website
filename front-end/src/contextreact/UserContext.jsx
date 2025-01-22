@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 // Creating context
 const UserContext = createContext();
@@ -15,8 +15,20 @@ export const UserProvider = ({ children }) => {
     Id: '',
   });
 
+  useEffect(() => {
+    const userDetails = localStorage.getItem('userDetails');
+    if (userDetails) {
+      setUser(JSON.parse(userDetails));
+    }
+  }, []);
+
   const updateUser = (newDetails) => {
-    setUser((prevUser) => ({ ...prevUser, ...newDetails }));
+    setUser((prevUser) => {
+      const updatedUser = { ...prevUser, ...newDetails };
+      // Save updated user data to localStorage
+      localStorage.setItem('userDetails', JSON.stringify(updatedUser));
+      return updatedUser;
+    });
   };
 
   return (

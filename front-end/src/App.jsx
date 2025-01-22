@@ -9,6 +9,7 @@ import HomePage from './page/HomePage';
 import { ComplaintProvider } from './contextreact/ComplaintContext';
 import AdminPage from './page/AdminPage';
 import { UserProvider } from './contextreact/UserContext';
+import CreateNewUser from './Components/ReuseableComponents/CreateNewUser';
 
 function App() {
   // Custom Layout Wrapper
@@ -30,7 +31,6 @@ function App() {
   return (
     <ProfileProvider>
     <UserProvider>
-
     <ComplaintProvider>
 
       <Router>
@@ -41,8 +41,8 @@ function App() {
             <Route exact path="/profile" element={<Userprofile />} />
             <Route exact path="/dashboard" element={<UserDashboard />} />
             <Route exact path="/home" element={<HomePage />} />
-            <Route exact path="/admin" element={<AdminPage/> }/>
-            
+            <Route exact path="/notification" element={<AdminPage/> }/>
+            <Route exact path="/new-user" element={<CreateNewUser/>}/>
           </Routes>
         </Layout>
       </Router>

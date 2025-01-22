@@ -1,13 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useUser } from "../contextreact/UserContext"; // Access user context
+import { useComplaintContext } from "../contextreact/ComplaintContext";
 
-const GrievanceAdminPage = () => {
+const AdminPage = () => {
   const [openGrievance, setOpenGrievance] = useState(null); // Track which grievance is expanded
-  const { users } = useUser(); // Access the users or grievances from the context
+  const { users = [], updateUser } = useUser(); // Changed setUser to updateUser
+  const { complaints = [], setComplaints } = useComplaintContext(); // Provide default fallback for complaints
+
+  // UseEffect to fetch data from localStorage
+  useEffect(() => {
+    const storedComplaints = localStorage.getItem('complaints');
+    const storedUsers = localStorage.getItem('userDetails');
+
+    if (storedComplaints) {
+      setComplaints(JSON.parse(storedComplaints));
+    } else {
+      console.log("No complaints in localStorage");
+    }
+
+    if (storedUsers) {
+      updateUser(JSON.parse(storedUsers)); // Changed setUser to updateUser
+    } else {
+      console.log("No user data in localStorage");
+    }
+  }, []); // update dependency to updateUser
 
   const toggleView = (id) => {
     setOpenGrievance(openGrievance === id ? null : id); // Toggle view on click
   };
+
+  console.log("Users:", users);
+  console.log("Complaints:", complaints);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -53,46 +76,39 @@ const GrievanceAdminPage = () => {
               </tr>
             </thead>
             <tbody>
-              {/* Map over users data */}
-              {users && users.map((user) => (
-                <React.Fragment key={user.id}>
-                  <tr>
-                    <td className="p-2">{user.Id}</td>
-                    <td className="p-2">{user.fullName}</td>
-                    <td className="p-2">{user.date}</td>
-                    <td className="p-2">{user.issue}</td>
-                    <td className="p-2">{user.year}</td>
-                    <td className="p-2">{user.type}</td>
-                    <td className="p-2">
-                      <button
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-500"
-                        onClick={() => toggleView(user.id)}
-                      >
-                        {openGrievance === user.id ? "Hide" : "View"}
-                      </button>
-                    </td>
-                  </tr>
-
-                  {/* Conditionally render the details of the grievance */}
-                  {openGrievance === user.id && (
-                    <tr className="bg-gray-50">
-                      <td colSpan="7" className="p-4">
-                        <p>{user.details}</p>
+              {users.map((user) => {
+                const complaint = complaints.find((comp) => comp.studentId === user.studentId) || {}; // Correct key for matching complaint and user
+                return (
+                  <React.Fragment key={user.studentId}> {/* Changed from user.id to user.studentId */}
+                    <tr>
+                      <td className="p-2">{user.studentId}</td>
+                      <td className="p-2">{user.fullName}</td>
+                      <td className="p-2">{complaint.createdAt || "N/A"}</td>
+                      <td className="p-2">{complaint ? complaint.type : "N/A"}</td>
+                      <td className="p-2">{user.year || "N/A"}</td>
+                      <td className="p-2">{complaint?.type || "N/A"}</td>
+                      <td className="p-2">
+                        <button
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-500"
+                          onClick={() => toggleView(user.studentId)} // Toggling view per user ID
+                        >
+                          {openGrievance === user.studentId ? "Hide" : "View"}
+                        </button>
                       </td>
                     </tr>
-                  )}
-                </React.Fragment>
-              ))}
+                    {openGrievance === user.studentId && complaint && (
+                      <tr>
+                        <td colSpan="7" className="p-4">
+                          <p>{complaint.message || "No message provided"}</p>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
-
-        {/* Grievance Actions */}
-        {/* <div className="mt-8 flex justify-end gap-4">
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-500">View Details</button>
-          <button className="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-500">Mark Resolved</button>
-          <button className="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-500">Escalate Issue</button>
-        </div> */}
       </main>
 
       {/* Footer */}
@@ -103,4 +119,4 @@ const GrievanceAdminPage = () => {
   );
 };
 
-export default GrievanceAdminPage;
+export default AdminPage;

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useComplaintContext } from '../../contextreact/ComplaintContext';
 
-// Complaint Form Component
 const ComplaintForm = () => {
   const [complaint, setComplaint] = useState('');
   const [complaintTo, setComplaintTo] = useState('');
@@ -10,15 +9,13 @@ const ComplaintForm = () => {
   const [complainType, setComplainType] = useState('');
   const [messageType, setMessageType] = useState('public');
   const [error, setError] = useState('');
-  const [taskSrNo, setTaskSrNo] = useState(1); // Serial number is starting at 1
+  const [taskSrNo, setTaskSrNo] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const { addComplaint } = useComplaintContext(); 
+  const { addComplaint } = useComplaintContext();
 
-  // Helper to handle input changes
   const handleInputChange = (setter) => (e) => setter(e.target.value);
 
-  // Format Date and Time
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
     const formattedDate = date.toLocaleDateString('en-US', {
@@ -34,43 +31,48 @@ const ComplaintForm = () => {
     return `Date: ${formattedDate} | Time: ${formattedTime}`;
   };
 
-  // Handle submit complaint
+  const saveToLocalStorage = (complaint) => {
+    const complaints = JSON.parse(localStorage.getItem('complaints')) || [];
+    complaints.push(complaint);
+    localStorage.setItem('complaints', JSON.stringify(complaints));
+  };
+
   const handleComplaintSubmit = () => {
-    // Form validation
     if (!complaint.trim() || !complaintTo || !complainType) {
       setError('Please fill all fields.');
       return;
     }
 
-    if (taskSrNo >= 1 && taskSrNo <= 20) {
-      setTaskSrNo((prev) => prev + 1); // Increment normally by 1 for each task
-    } else {
+    if (taskSrNo > 20) {
       setError('Maximum task serial number reached.');
       return;
     }
 
-    setError(''); // Reset error message on valid submission
-    
+    setError('');
     const newComplaint = {
       sr: taskSrNo,
       message: complaint,
       recipient: complaintTo,
+      department: complaintTo === 'hod' ? department : null,
+      staffName: complaintTo === 'staff' ? staffName : null,
       type: complainType,
       status: 'Pending',
       createdAt: formatDateTime(new Date().toISOString()),
+      messageType,
     };
 
-    // Add new complaint to context
     addComplaint(newComplaint);
-    setIsSubmitted(true); // After submission, show success message
+    saveToLocalStorage(newComplaint); // Save complaint to local storage
 
-    // Reset form fields after submission
+    setTaskSrNo((prev) => prev + 1);
+    setIsSubmitted(true);
+
     setComplaint('');
     setComplaintTo('');
-    setComplainType('');
-    setMessageType('public');
     setDepartment('');
     setStaffName('');
+    setComplainType('');
+    setMessageType('public');
   };
 
   return (
@@ -93,7 +95,6 @@ const ComplaintForm = () => {
             <option value="staff">Staff</option>
           </select>
         </li>
-
         {complaintTo === 'hod' && (
           <li className="bg-gray-100 p-3 rounded-md">
             <label htmlFor="department" className="font-medium">Select Department</label>
@@ -111,7 +112,6 @@ const ComplaintForm = () => {
             </select>
           </li>
         )}
-        
         {complaintTo === 'staff' && (
           <li className="bg-gray-100 p-3 rounded-md">
             <label htmlFor="staffName" className="font-medium">Staff Name</label>
@@ -125,7 +125,6 @@ const ComplaintForm = () => {
             />
           </li>
         )}
-
         <li className="bg-gray-100 p-3 rounded-md">
           <label htmlFor="complainType" className="font-medium">Related To</label>
           <select
@@ -139,7 +138,6 @@ const ComplaintForm = () => {
             <option value="holiday">Holiday</option>
           </select>
         </li>
-
         <li className="bg-gray-100 p-3 rounded-md">
           <label htmlFor="messageType" className="font-medium">Message Type</label>
           <select
@@ -152,7 +150,6 @@ const ComplaintForm = () => {
             <option value="private">Private</option>
           </select>
         </li>
-
         <li className="bg-gray-100 p-3 rounded-md">
           <label htmlFor="complaintMessage" className="font-medium">Write Message</label>
           <textarea

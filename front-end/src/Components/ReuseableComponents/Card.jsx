@@ -5,6 +5,7 @@ import { dislikedark, dislikelight, likedark, likelight } from '../../assets/ico
 const Card = () => {
   const { complaints, setComplaints } = useComplaintContext();
   const [liked, setLiked] = useState(null);   // Track user vote state: null, true (like), false (dislike)
+  const [lastClicked, setLastClicked] = useState(null);  // Track last click time
   
   // Handle voting on a complaint
   const handleVote = (id, voteType) => {
@@ -14,28 +15,22 @@ const Card = () => {
     setComplaints(updatedComplaints);
   };
 
-  const handleLike = (id) => {
-    if (liked === 'like') {
-      setLiked(null);  // Deselect if already liked
-    } else {
-      setLiked('like');
-      handleVote(id, 'like');
-      if (liked === 'dislike') {
-        setLiked(null); // Reset dislike if user switches
-      }
-    }
-  };
+  const handleClick = (id, voteType) => {
+    const currentTime = Date.now();
 
-  const handleDislike = (id) => {
-    if (liked === 'dislike') {
-      setLiked(null);  // Deselect if already disliked
+    // Single click: Set a timeout to handle this vote as a single-click action
+    if (lastClicked && currentTime - lastClicked < 500) { // Time threshold for double click (500ms)
+      // This is a double-click
+      setLiked(null); // Revert to neutral state
+      handleVote(id, voteType === 'like' ? 'dislike' : 'like');
     } else {
-      setLiked('dislike');
-      handleVote(id, 'dislike');
-      if (liked === 'like') {
-        setLiked(null); // Reset like if user switches
-      }
+      // Single click: Change state to dark (active)
+      setLiked(voteType);
+      handleVote(id, voteType);
     }
+
+    // Update last clicked time
+    setLastClicked(currentTime);
   };
 
   return (
@@ -44,7 +39,7 @@ const Card = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {complaints.map((complaint) => (
           <div
-            key={complaint.id}
+            key={complaint.createdAt}
             className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out"
           >
             <div className="p-6">
@@ -80,8 +75,7 @@ const Card = () => {
 
                 {/* Like Button */}
                 <button
-                  onClick={() => handleLike(complaint.id)}
-                  disabled={liked === 'dislike'}
+                  onClick={() => handleClick(complaint.id, 'like')}
                   className={`flex items-center px-2 py-1 transition-all duration-300 ${liked === 'like' ? 'text-blue-500' : 'text-gray-500'}`}
                 >
                   <img
@@ -94,8 +88,7 @@ const Card = () => {
 
                 {/* Dislike Button */}
                 <button
-                  onClick={() => handleDislike(complaint.id)}
-                  disabled={liked === 'like'}
+                  onClick={() => handleClick(complaint.id, 'dislike')}
                   className={`flex items-center px-2 py-1 transition-all duration-300 ${liked === 'dislike' ? 'text-red-500' : 'text-gray-500'}`}
                 >
                   <img
