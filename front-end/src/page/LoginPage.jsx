@@ -5,6 +5,15 @@ const LoginPage = () => {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const navigate = useNavigate();
 
+  // Get the API base URL from the .env file
+  const apiBaseUrl = 'http://localhost:7001/api/auth';
+
+  // Check if API URL is valid
+  if (!apiBaseUrl) {
+    alert("API base URL is missing in the environment variables.");
+    return;
+  }
+
   const handleChange = (e) => {
     setCredentials({
       ...credentials,
@@ -12,14 +21,37 @@ const LoginPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Simulate backend validation
-    if (credentials.email === "user@example.com" && credentials.password === "1") {
-      navigate("/profile"); // Redirect to user dashboard or homepage
-    } else {
-      alert("Invalid email or password."); // Basic error message
+    if (!credentials.email || !credentials.password) {
+      alert("Please fill in both email and password.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Login successful:", data);
+
+        // Save the token to localStorage on successful login
+        localStorage.setItem('authToken', data.token);
+
+        // Redirect user to the profile page after login
+        navigate("/profile");
+      } else {
+        alert(data.message || "Invalid email or password.");
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      alert("Something went wrong. Please try again.");
     }
   };
 
@@ -31,7 +63,9 @@ const LoginPage = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email */}
           <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
             <input
               id="email"
               name="email"
@@ -46,7 +80,9 @@ const LoginPage = () => {
 
           {/* Password */}
           <div className="mb-4">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
             <input
               id="password"
               name="password"
@@ -80,7 +116,9 @@ const LoginPage = () => {
         {/* Don't have an account? */}
         <div className="mt-4 text-center text-sm text-gray-600">
           <span>Don’t have an account? </span>
-          <a href="/new-user" className="text-indigo-600 hover:text-indigo-500 font-medium">Create one here</a>
+          <a href="/createuser" className="text-indigo-600 hover:text-indigo-500 font-medium">
+            Create one here
+          </a>
         </div>
       </div>
     </div>

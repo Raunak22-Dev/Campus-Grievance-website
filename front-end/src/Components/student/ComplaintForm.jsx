@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useComplaintContext } from '../../contextreact/ComplaintContext';
 
 const ComplaintForm = () => {
   const [complaint, setComplaint] = useState('');
@@ -11,13 +10,13 @@ const ComplaintForm = () => {
   const [error, setError] = useState('');
   const [taskSrNo, setTaskSrNo] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const { addComplaint } = useComplaintContext();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (setter) => (e) => setter(e.target.value);
 
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
+    if (isNaN(date)) return '';
     const formattedDate = date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: '2-digit',
@@ -37,9 +36,19 @@ const ComplaintForm = () => {
     localStorage.setItem('complaints', JSON.stringify(complaints));
   };
 
-  const handleComplaintSubmit = () => {
+  const handleComplaintSubmit = async () => {
     if (!complaint.trim() || !complaintTo || !complainType) {
-      setError('Please fill all fields.');
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    if (complaintTo === 'hod' && !department) {
+      setError('Please select a department.');
+      return;
+    }
+
+    if (complaintTo === 'staff' && !staffName.trim()) {
+      setError('Please enter the staff name.');
       return;
     }
 
@@ -49,8 +58,9 @@ const ComplaintForm = () => {
     }
 
     setError('');
+    setIsLoading(true); // Start loading when the form is submitted
+
     const newComplaint = {
-      sr: taskSrNo,
       message: complaint,
       recipient: complaintTo,
       department: complaintTo === 'hod' ? department : null,
@@ -59,14 +69,36 @@ const ComplaintForm = () => {
       status: 'Pending',
       createdAt: formatDateTime(new Date().toISOString()),
       messageType,
+      sr: taskSrNo,
     };
 
-    addComplaint(newComplaint);
-    saveToLocalStorage(newComplaint); // Save complaint to local storage
+    try {
+      const response = await fetch('http://localhost:7001/api/complaints/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'auth-token': localStorage.getItem('token'),
+        },
+        body: JSON.stringify(newComplaint),
+      });
 
+      const result = await response.json();
+      setIsLoading(false); // Stop loading after response
+
+      if (response.ok) {
+        console.log('Complaint submitted successfully!');
+        setIsSubmitted(true);
+      } else {
+        setError(`Failed to submit complaint. Status Code: ${response.status}`);
+        console.error(result);
+      }
+    } catch (error) {
+      setError('Error submitting complaint, please try again.');
+      console.error('Error:', error);
+    }
+
+    saveToLocalStorage(newComplaint);
     setTaskSrNo((prev) => prev + 1);
-    setIsSubmitted(true);
-
     setComplaint('');
     setComplaintTo('');
     setDepartment('');
@@ -136,6 +168,7 @@ const ComplaintForm = () => {
             <option value="">Select</option>
             <option value="financial">Financial Status</option>
             <option value="holiday">Holiday</option>
+            <option value="internet issue">Internet Issue</option>
           </select>
         </li>
         <li className="bg-gray-100 p-3 rounded-md">
@@ -163,8 +196,9 @@ const ComplaintForm = () => {
           <button
             onClick={handleComplaintSubmit}
             className="bg-red-500 text-white py-2 px-6 rounded-md hover:bg-red-600 transition"
+            disabled={isLoading}
           >
-            Submit Complaint
+            {isLoading ? 'Submitting...' : 'Submit Complaint'}
           </button>
           {isSubmitted && <p className="mt-4 text-green-500">Your complaint has been submitted successfully!</p>}
         </li>

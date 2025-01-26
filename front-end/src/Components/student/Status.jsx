@@ -9,7 +9,6 @@ const Status = () => {
   const [showForm, setShowForm] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [selectedTaskId, setSelectedTaskId] = useState(null);  // Change to store the task ID
-
   const { complaints, setComplaints } = useComplaintContext();
 
   // Open the form/modal and set the current status
@@ -25,10 +24,20 @@ const Status = () => {
   };
 
   // Delete a complaint
-  const handleDelete = (id) => {
-    setComplaints(complaints.filter((task) => task.sr !== id));
+  const handleDelete = (taskSr) => {
+    setComplaints(complaints.filter((task) => task.sr !== taskSr));
+    // Reassign the `sr` values after removal to maintain correct sequence
+    updateSequence();
   };
+  
 
+  const updateSequence = () => {
+    const updatedComplaints = complaints.map((task, index) => ({
+      ...task,
+      sr: index + 1, // Reset serial number to index + 1
+    }));
+    setComplaints(updatedComplaints);
+  };
   // Filter tasks by status
   const getTasksByStatus = () =>
     complaints.filter((task) => task.status === currentStatus);

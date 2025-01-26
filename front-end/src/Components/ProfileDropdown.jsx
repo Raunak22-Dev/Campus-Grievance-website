@@ -1,51 +1,83 @@
 import React, { useState } from 'react';
 import { pItems } from '../content';
 import { useProfile } from '../contextreact/ProfileContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const ProfileDropdown = () => {
   const { avatar } = useProfile(); // Get avatar from ProfileContext
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
+  const handleLogout = () => {
+    // Clear the authentication token
+    localStorage.removeItem('authToken');
+    console.log('Logged out successfully');
+
+    // Navigate to the logout page
+    navigate('/login');
+  };
+
   const renderOptions = () => {
-    return pItems.map((item) => (
-      <Link
-        to={item.href}
-        key={item.label}
-        className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 text-sm font-semibold transition-colors"
-        role="menuitem"
-      >
-        <img
-          src={item.img}
-          alt="Option Icon"
-          width={25}
-          height={25}
-          className="mr-3"
-        />
-        {item.label}
-      </Link>
-    ));
+    return pItems.map((item) => {
+      if (item.label === 'Logout') {
+        // Attach the logout function to the Logout option
+        return (
+          <button
+            key={item.label}
+            onClick={handleLogout}
+            className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 text-sm font-semibold transition-colors w-full text-left"
+            role="menuitem"
+          >
+            <img
+              src={item.img}
+              alt="Option Icon"
+              width={25}
+              height={25}
+              className="mr-3"
+            />
+            {item.label}
+          </button>
+        );
+      }
+
+      return (
+        <Link
+          to={item.href}
+          key={item.label}
+          className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 text-sm font-semibold transition-colors"
+          role="menuitem"
+        >
+          <img
+            src={item.img}
+            alt="Option Icon"
+            width={25}
+            height={25}
+            className="mr-3"
+          />
+          {item.label}
+        </Link>
+      );
+    });
   };
 
   return (
     <div className="relative">
       {/* Profile Button */}
       <button
-  className="rounded-full w-14  h-14 p-1 flex items-center justify-center "
-  onClick={toggleDropdown}
-  aria-haspopup="true"
-  aria-expanded={isDropdownOpen}
-  aria-label="Toggle profile options"
->
-  <img
-    src={avatar || '/fallback-image.png'}
-    alt="Profile Avatar"
-    className="rounded-full w-full h-full object-cover"
-  />
-</button>
-
+        className="rounded-full w-14 h-14 p-1 flex items-center justify-center"
+        onClick={toggleDropdown}
+        aria-haspopup="true"
+        aria-expanded={isDropdownOpen}
+        aria-label="Toggle profile options"
+      >
+        <img
+          src={avatar || '/fallback-image.png'}
+          alt="Profile Avatar"
+          className="rounded-full w-full h-full object-cover"
+        />
+      </button>
 
       {/* Dropdown Menu */}
       {isDropdownOpen && (

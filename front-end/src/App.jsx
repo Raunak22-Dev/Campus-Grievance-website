@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from "react-route
 import Userprofile from './page/Userprofile';
 import { ProfileProvider } from './contextreact/ProfileContext';
 import UserDashboard from './page/UserDashboard';
-// import LoginPage from './page/LoginPage';
+import LoginPage from './page/LoginPage';
 import HomePage from './page/HomePage';
 import { ComplaintProvider } from './contextreact/ComplaintContext';
 import AdminPage from './page/AdminPage';
@@ -14,15 +14,18 @@ import CreateNewUser from './Components/ReuseableComponents/CreateNewUser';
 function App() {
   // Custom Layout Wrapper
   const Layout = ({ children }) => {
-    const location = useLocation();
+    const location = useLocation(); // Access the current path
 
-    // Exclude Navbar on specific routes
-    // const hideNavbar = location.pathname === '/login';
+    // Define paths where the Navbar should not appear
+    const hideNavbarPaths = ['/login', '/createuser'];
+
+    // Check if the current path matches any of the hide paths
+    const hideNavbar = hideNavbarPaths.includes(location.pathname);
 
     return (
       <div className="App">
-        {/* {!hideNavbar && <Navbar />} */}
-        { <Navbar />}
+        {/* Conditionally render the Navbar */}
+        {!hideNavbar && <Navbar />}
         {children}
       </div>
     );
@@ -30,24 +33,22 @@ function App() {
 
   return (
     <ProfileProvider>
-    <UserProvider>
-    <ComplaintProvider>
-
-      <Router>
-        <Layout>
-          <Routes>
-            
-            {/* <Route exact path="/login" element={<LoginPage />} /> */}
-            <Route exact path="/profile" element={<Userprofile />} />
-            <Route exact path="/dashboard" element={<UserDashboard />} />
-            <Route exact path="/home" element={<HomePage />} />
-            <Route exact path="/notification" element={<AdminPage/> }/>
-            <Route exact path="/new-user" element={<CreateNewUser/>}/>
-          </Routes>
-        </Layout>
-      </Router>
-    </ComplaintProvider>
-    </UserProvider>
+      <UserProvider>
+        <ComplaintProvider>
+          <Router>
+            <Layout>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/createuser" element={<CreateNewUser />} />
+                <Route path="/profile" element={<Userprofile />} />
+                <Route path="/dashboard" element={<UserDashboard />} />
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/notification" element={<AdminPage />} />
+              </Routes>
+            </Layout>
+          </Router>
+        </ComplaintProvider>
+      </UserProvider>
     </ProfileProvider>
   );
 }
