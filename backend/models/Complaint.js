@@ -42,11 +42,8 @@ const ComplaintSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now,  // Use Date for timestamp and default to current date and time
-  },
-  sr: {
-    type: Number,
-    unique: true,
-  },
+  },user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  sr: { type: Number, unique: true },
 },{ timestamps: true });  // Automatic createdAt and updatedAt fields
 
 const Complaint = mongoose.model('Complaint', ComplaintSchema);

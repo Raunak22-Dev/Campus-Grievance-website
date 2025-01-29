@@ -12,7 +12,7 @@ export const UserProvider = ({ children }) => {
     year: '',
     department: '',
     email: '',
-    Id: '',
+    studentId: '',
   });
 
   useEffect(() => {

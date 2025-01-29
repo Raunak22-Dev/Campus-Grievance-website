@@ -1,24 +1,36 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const secret = "14adef4dsd4f4dd4dsfe7f7"; // Replace with your secret key
 
-// Middleware to fetch user details from the authentication token
 const fetchuser = (req, res, next) => {
-  // Get the token from the request header
-  const token = req.header("auth-token");
+  const authHeader = req.header("Authorization");
 
-  if (!token) {
-    return res.status(401).json({ success: false, message: "Authentication required" });
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ success: false, message: "Authentication token required" });
   }
 
+  const token = authHeader.split(" ")[1]; // Extract token
+
   try {
-    const data = jwt.verify(token, secret); // Replace JWT_SECRET with your secret
+    const data = jwt.verify(token, secret);
+
+    if (!data.user) {
+      return res.status(401).json({ success: false, message: "Invalid token format" });
+    }
+
     req.user = data.user;
-    console.log(data)
     next();
-    
-} catch (error) {
-    return res.status(401).json({ message: "Invalid token" });
-}
+  } catch (error) {
+    const errorMessages = {
+      TokenExpiredError: "Token expired",
+      JsonWebTokenError: "Invalid token signature",
+      NotBeforeError: "Token not active yet",
+    };
+
+    return res.status(401).json({
+      success: false,
+      message: errorMessages[error.name] || "Invalid token",
+    });
+  }
 };
 
 module.exports = fetchuser;

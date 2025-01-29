@@ -39,7 +39,7 @@ const Card = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {complaints.map((complaint) => (
           <div
-            key={complaint.createdAt}
+            key={complaint.id}
             className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out"
           >
             <div className="p-6">

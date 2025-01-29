@@ -8,11 +8,6 @@ const LoginPage = () => {
   // Get the API base URL from the .env file
   const apiBaseUrl = 'http://localhost:7001/api/auth';
 
-  // Check if API URL is valid
-  if (!apiBaseUrl) {
-    alert("API base URL is missing in the environment variables.");
-    return;
-  }
 
   const handleChange = (e) => {
     setCredentials({
@@ -22,38 +17,34 @@ const LoginPage = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  if (!credentials.email || !credentials.password) {
+    alert("Please fill in both email and password.");
+    return;
+  }
 
-    if (!credentials.email || !credentials.password) {
-      alert("Please fill in both email and password.");
-      return;
+  try {
+    const response = await fetch(`${apiBaseUrl}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(credentials),
+    });
+
+    const data = await response.json();
+
+    if (response.status === 200) {
+      console.log("Login successful:", data);
+      localStorage.setItem('authToken', data.token);
+      navigate("/profile");
+    } else {
+      alert(data.message || "Invalid email or password.");
     }
+  } catch (error) {
+    console.error("Error during login:", error);
+    alert("Something went wrong. Please try again.");
+  }
+};
 
-    try {
-      const response = await fetch(`${apiBaseUrl}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log("Login successful:", data);
-
-        // Save the token to localStorage on successful login
-        localStorage.setItem('authToken', data.token);
-
-        // Redirect user to the profile page after login
-        navigate("/profile");
-      } else {
-        alert(data.message || "Invalid email or password.");
-      }
-    } catch (error) {
-      console.error("Error during login:", error);
-      alert("Something went wrong. Please try again.");
-    }
-  };
 
   return (
     <div className="min-h-screen flex justify-center items-center bg-gradient-to-r from-indigo-600 to-indigo-900 py-12">

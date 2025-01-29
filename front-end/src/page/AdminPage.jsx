@@ -1,119 +1,142 @@
 import React, { useState, useEffect } from "react";
-import { useUser } from "../contextreact/UserContext"; // Access user context
+import { useUser } from "../contextreact/UserContext";
 import { useComplaintContext } from "../contextreact/ComplaintContext";
 
 const AdminPage = () => {
-  const [openGrievance, setOpenGrievance] = useState(null); // Track which grievance is expanded
-  const { users = [], updateUser } = useUser(); // Changed setUser to updateUser
-  const { complaints = [], setComplaints } = useComplaintContext(); // Provide default fallback for complaints
+  const [openGrievance, setOpenGrievance] = useState(null);
+  const { users = []  } = useUser();
+  const { complaints = [], setComplaints } = useComplaintContext();
 
-  // UseEffect to fetch data from localStorage
+// Get all user details from localStorage
+const getAllUserDetails = () => {
+  const allUsers = [];
+  const keys = Object.keys(localStorage);
+  
+  keys.forEach(key => {
+    if (key.startsWith('userDetails')) {
+      const userData = JSON.parse(localStorage.getItem(key));
+      allUsers.push(userData);
+    }
+  });
+  
+  return allUsers;
+};
+
   useEffect(() => {
     const storedComplaints = localStorage.getItem('complaints');
-    const storedUsers = localStorage.getItem('userDetails');
-
     if (storedComplaints) {
       setComplaints(JSON.parse(storedComplaints));
-    } else {
-      console.log("No complaints in localStorage");
     }
-
-    if (storedUsers) {
-      updateUser(JSON.parse(storedUsers)); // Changed setUser to updateUser
-    } else {
-      console.log("No user data in localStorage");
-    }
-  }, []); // update dependency to updateUser
+  }, [setComplaints]);
 
   const toggleView = (id) => {
-    setOpenGrievance(openGrievance === id ? null : id); // Toggle view on click
+    setOpenGrievance(openGrievance === id ? null : id);
   };
 
-  console.log("Users:", users);
-  console.log("Complaints:", complaints);
+  // Calculate statistics
+  const pending = complaints.filter(c => c.status === 'Pending').length;
+  const resolved = complaints.filter(c => c.status === 'Resolved').length;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* Content */}
       <main className="p-6 flex-1">
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-xl font-semibold">Total Complaints</h3>
+            <p className="text-3xl font-bold text-blue-600 mt-2">{complaints.length}</p>
+          </div>
           <div className="bg-white shadow rounded-lg p-6">
             <h3 className="text-xl font-semibold">Pending</h3>
-            <p className="text-gray-600 mt-2">35 Issues</p>
+            <p className="text-3xl font-bold text-yellow-600 mt-2">{pending}</p>
           </div>
           <div className="bg-white shadow rounded-lg p-6">
             <h3 className="text-xl font-semibold">Resolved</h3>
-            <p className="text-gray-600 mt-2">120 Issues</p>
-          </div>
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-xl font-semibold">Completed</h3>
-            <p className="text-gray-600 mt-2">5 Issues</p>
-          </div>
-        </div>
-
-        {/* Analytics Chart */}
-        <div className="bg-white shadow rounded-lg p-6 mt-8">
-          <h3 className="text-xl font-semibold mb-4">Grievance Trends</h3>
-          <div className="bg-gray-200 h-48 rounded-lg flex items-center justify-center">
-            <p className="text-gray-500">Chart Placeholder</p>
+            <p className="text-3xl font-bold text-green-600 mt-2">{resolved}</p>
           </div>
         </div>
 
         {/* Recent Grievances */}
-        <div className="mt-8">
-          <h3 className="text-xl font-semibold mb-4">Recent Grievances</h3>
-          <table className="w-full text-left bg-white shadow rounded-lg">
-            <thead>
-              <tr className="border-b">
-                <th className="p-2">Student ID</th>
-                <th className="p-2">User Name</th>
-                <th className="p-2">Date</th>
-                <th className="p-2">Complaint related to</th>
-                <th className="p-2">Academy Year</th>
-                <th className="p-2">Type</th>
-                <th className="p-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => {
-                const complaint = complaints.find((comp) => comp.studentId === user.studentId) || {}; // Correct key for matching complaint and user
-                return (
-                  <React.Fragment key={user.studentId}> {/* Changed from user.id to user.studentId */}
-                    <tr>
-                      <td className="p-2">{user.studentId}</td>
-                      <td className="p-2">{user.fullName}</td>
-                      <td className="p-2">{complaint.createdAt || "N/A"}</td>
-                      <td className="p-2">{complaint ? complaint.type : "N/A"}</td>
-                      <td className="p-2">{user.year || "N/A"}</td>
-                      <td className="p-2">{complaint?.type || "N/A"}</td>
-                      <td className="p-2">
-                        <button
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-500"
-                          onClick={() => toggleView(user.studentId)} // Toggling view per user ID
-                        >
-                          {openGrievance === user.studentId ? "Hide" : "View"}
-                        </button>
-                      </td>
-                    </tr>
-                    {openGrievance === user.studentId && complaint && (
-                      <tr>
-                        <td colSpan="7" className="p-4">
-                          <p>{complaint.message || "No message provided"}</p>
+        <div className="bg-white shadow rounded-lg p-6">
+          <h3 className="text-2xl font-semibold mb-6">Recent Grievances</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3">Student ID</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Department</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+              {complaints.map((complaint) => {
+  const localStorageUsers = getAllUserDetails();
+
+  // If not found in context, check localStorage users
+  const localStorageUser = localStorageUsers.find(u => 
+    u.studentId === complaint.studentId || 
+    u.studentID === complaint.studentId
+  );
+
+  // Use whichever user is found first
+  const user =  localStorageUser;
+                  return (
+                    <React.Fragment key={complaint.id}>
+                      <tr className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                          {user?.studentId || "N/A"}
+                        </td>
+                        <td className="px-4 py-3">{complaint.createdAt}</td>
+                        <td className="px-4 py-3">{complaint.type}</td>
+                        <td className="px-4 py-3">{complaint.department || 'N/A'}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded-full text-sm 
+                            ${complaint.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                              'bg-green-100 text-green-800'}`}>
+                            {complaint.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => toggleView(complaint.id)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                          >
+                            {openGrievance === complaint.id ? 'Hide' : 'View'}
+                          </button>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
+                      {openGrievance === complaint.id && (
+                        <tr className="bg-gray-50">
+                          <td colSpan="6" className="px-4 py-3">
+                            <div className="mb-2 font-medium">Complaint Details:</div>
+                            <p className="bg-white p-4 rounded-lg shadow-inner">
+                              {complaint.message}
+                            </p>
+                            <div className="mt-4 flex gap-4">
+                              <button className="text-sm text-green-600 hover:text-green-700">
+                                Mark Resolved
+                              </button>
+                              <button className="text-sm text-red-600 hover:text-red-700">
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="bg-gray-800 text-white py-4 mt-8 text-center">
-        <p>© 2025 Grievance Dashboard. All rights reserved.</p>
+        <p>© 2024 Grievance Management System. All rights reserved.</p>
       </footer>
     </div>
   );

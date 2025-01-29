@@ -16,11 +16,11 @@ const UserDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-red-100 flex items-center justify-center">
+    <div className="min-h-screen bg-slate-50  flex items-center justify-center">
       <div className="w-full lg:w-3/4 p-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent Activity Section */}
-          <div className="bg-white shadow-xl rounded-lg p-6 col-span-2">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 shadow-xl rounded-lg p-6 col-span-2">
             <h2 className="text-2xl font-semibold mb-4 text-blue-600">Status</h2>
             <Status complaints={complaints} setComplaints={setComplaints} />
           </div>

@@ -1,93 +1,152 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { pItems } from '../content';
 import { useProfile } from '../contextreact/ProfileContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { NavbarItems } from '../content';
 
-const ProfileDropdown = () => {
-  const { avatar } = useProfile(); // Get avatar from ProfileContext
+const ProfileDropdown = ({ mobileView, onClose }) => {
+  const { avatar, clearProfile } = useProfile();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
+  const dropdownRef = useRef(null);
 
-  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+  // Handle clicks outside the dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+        onClose?.();
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsDropdownOpen(false);
+        onClose?.();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [onClose]);
 
   const handleLogout = () => {
-    // Clear the authentication token
     localStorage.removeItem('authToken');
-    console.log('Logged out successfully');
-
-    // Navigate to the logout page
+    localStorage.removeItem('userDetails');
+    clearProfile?.();
     navigate('/login');
+    onClose?.();
   };
 
-  const renderOptions = () => {
-    return pItems.map((item) => {
-      if (item.label === 'Logout') {
-        // Attach the logout function to the Logout option
-        return (
-          <button
-            key={item.label}
-            onClick={handleLogout}
-            className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 text-sm font-semibold transition-colors w-full text-left"
-            role="menuitem"
-          >
-            <img
-              src={item.img}
-              alt="Option Icon"
-              width={25}
-              height={25}
-              className="mr-3"
-            />
-            {item.label}
-          </button>
-        );
-      }
+  const handleItemClick = () => {
+    setIsDropdownOpen(false);
+    onClose?.();
+  };
 
-      return (
-        <Link
-          to={item.href}
-          key={item.label}
-          className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 text-sm font-semibold transition-colors"
+  const DropdownItem = ({ item }) => (
+    <div className="group relative">
+      {item.label === 'Logout' ? (
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors text-sm font-medium"
           role="menuitem"
         >
           <img
             src={item.img}
-            alt="Option Icon"
-            width={25}
-            height={25}
-            className="mr-3"
+            alt=""
+            className="mr-3 h-6 w-6 text-gray-400 group-hover:text-blue-600"
+            aria-hidden="true"
+          />
+          {item.label}
+        </button>
+      ) : (
+        <Link
+          to={item.href}
+          onClick={handleItemClick}
+          className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors text-sm font-medium"
+          role="menuitem"
+        >
+          <img
+            src={item.img}
+            alt=""
+            className="mr-3 h-6 w-6 text-gray-400 group-hover:text-blue-600"
+            aria-hidden="true"
           />
           {item.label}
         </Link>
-      );
-    });
-  };
+      )}
+    </div>
+  );
 
   return (
-    <div className="relative">
-      {/* Profile Button */}
-      <button
-        className="rounded-full w-14 h-14 p-1 flex items-center justify-center"
-        onClick={toggleDropdown}
-        aria-haspopup="true"
-        aria-expanded={isDropdownOpen}
-        aria-label="Toggle profile options"
-      >
-        <img
-          src={avatar || '/fallback-image.png'}
-          alt="Profile Avatar"
-          className="rounded-full w-full h-full object-cover"
-        />
-      </button>
-
-      {/* Dropdown Menu */}
-      {isDropdownOpen && (
-        <div
-          className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white z-50"
-          role="menu"
-          aria-orientation="vertical"
-          tabIndex="-1"
+    <div className={`relative ${mobileView ? 'w-full' : ''}`} ref={dropdownRef}>
+      {!mobileView && (
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="flex items-center gap-1 rounded-full p-1 hover:ring-2 hover:ring-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-expanded={isDropdownOpen}
+          aria-haspopup="true"
         >
-          <div className="py-1">{renderOptions()}</div>
+          <span className="sr-only">Open user menu</span>
+          <img
+            src={avatar || '/default-avatar.png'}
+            alt="User profile"
+            className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm"
+            onError={(e) => {
+              e.target.src = '/default-avatar.png';
+            }}
+          />
+        </button>
+      )}
+
+      {(isDropdownOpen || mobileView) && (
+        <div
+          className={`${
+            mobileView 
+              ? 'relative w-full shadow-none mt-2' 
+              : 'absolute right-0 mt-2 w-64 shadow-lg'
+          } rounded-xl bg-white z-50 ring-1 ring-black ring-opacity-5`}
+          role="menu"
+        >
+          <div className="py-2">
+            {/* Mobile Navigation Items */}
+            {mobileView && (
+        <>
+          {NavbarItems.map((item) => (
+            <Link
+              key={item.label}
+              to={item.href}
+              onClick={handleItemClick}
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors text-sm font-medium relative"
+            >
+              <img
+                src={item.img}
+                alt={item.label}
+                className="mr-3 h-6 w-6 text-gray-400"
+              />
+              {item.label}
+              {item.badge && (
+                <span className="ml-auto bg-red-500 text-xs text-white w-5 h-5 rounded-full flex items-center justify-center">
+                  {item.badge}
+                </span>
+              )}
+            </Link>
+          ))}
+                
+                <div className="border-t my-2"></div>
+              </>
+            )}
+
+            {/* Profile Items */}
+            {pItems.map((item) => (
+              <DropdownItem key={item.label} item={item} />
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid'; // Import uuidv4
 
 const ComplaintForm = () => {
   const [complaint, setComplaint] = useState('');
@@ -6,7 +7,7 @@ const ComplaintForm = () => {
   const [department, setDepartment] = useState('');
   const [staffName, setStaffName] = useState('');
   const [complainType, setComplainType] = useState('');
-  const [messageType, setMessageType] = useState('public');
+  const [messageType, setMessageType] = useState('Public');
   const [error, setError] = useState('');
   const [taskSrNo, setTaskSrNo] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -33,9 +34,10 @@ const ComplaintForm = () => {
   const saveToLocalStorage = (complaint) => {
     const complaints = JSON.parse(localStorage.getItem('complaints')) || [];
     complaints.push(complaint);
-    localStorage.setItem('complaints', JSON.stringify(complaints));
+    localStorage.setItem('complaints', JSON.stringify(complaints));  // Check in the console
   };
-
+  
+  
   const handleComplaintSubmit = async () => {
     if (!complaint.trim() || !complaintTo || !complainType) {
       setError('Please fill in all required fields.');
@@ -61,6 +63,7 @@ const ComplaintForm = () => {
     setIsLoading(true); // Start loading when the form is submitted
 
     const newComplaint = {
+      id: uuidv4(), // Add unique ID here
       message: complaint,
       recipient: complaintTo,
       department: complaintTo === 'hod' ? department : null,
@@ -68,19 +71,21 @@ const ComplaintForm = () => {
       type: complainType,
       status: 'Pending',
       createdAt: formatDateTime(new Date().toISOString()),
-      messageType,
-      sr: taskSrNo,
+      messageType
     };
 
     try {
+      const token = localStorage.getItem('authToken')
+     
       const response = await fetch('http://localhost:7001/api/complaints/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'auth-token': localStorage.getItem('token'),
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify(newComplaint),
       });
+      console.log(localStorage.getItem('authToken'))
 
       const result = await response.json();
       setIsLoading(false); // Stop loading after response
@@ -104,107 +109,190 @@ const ComplaintForm = () => {
     setDepartment('');
     setStaffName('');
     setComplainType('');
-    setMessageType('public');
+    setMessageType('Public');
   };
 
   return (
-    <div className="mt-10 bg-white shadow-xl rounded-lg p-6">
-      <h2 className="text-2xl font-semibold mb-4 text-blue-600">Submit Complaint</h2>
-      {error && <p className="text-red-500">{error}</p>}
-      <ul className="space-y-4">
-        <li className="bg-gray-100 p-3 rounded-md">
-          <label htmlFor="complainTo" className="font-medium">Complaint To</label>
-          <select
-            id="complainTo"
-            value={complaintTo}
-            onChange={handleInputChange(setComplaintTo)}
-            className="w-full p-2 border-2 border-gray-300 rounded-md"
-          >
-            <option value="">Select</option>
-            <option value="principal">Principal</option>
-            <option value="vicePrincipal">Vice Principal</option>
-            <option value="hod">Head of Department (HOD)</option>
-            <option value="staff">Staff</option>
-          </select>
-        </li>
-        {complaintTo === 'hod' && (
-          <li className="bg-gray-100 p-3 rounded-md">
-            <label htmlFor="department" className="font-medium">Select Department</label>
-            <select
-              id="department"
-              value={department}
-              onChange={handleInputChange(setDepartment)}
-              className="w-full p-2 border-2 border-gray-300 rounded-md"
-            >
-              <option value="">Select</option>
-              <option value="cse">Computer Science</option>
-              <option value="ece">Electronics</option>
-              <option value="mech">Mechanical</option>
-              <option value="civil">Civil</option>
-            </select>
-          </li>
-        )}
-        {complaintTo === 'staff' && (
-          <li className="bg-gray-100 p-3 rounded-md">
-            <label htmlFor="staffName" className="font-medium">Staff Name</label>
-            <input
-              id="staffName"
-              type="text"
-              value={staffName}
-              onChange={handleInputChange(setStaffName)}
-              placeholder="Enter Staff Name"
-              className="w-full p-2 border border-gray-300 rounded-md"
+    <div className="max-w-6xl mx-auto mt-8 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-2xl rounded-xl p-8">
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">Submit Your Concern</h2>
+        <p className="text-gray-600">We're here to help resolve your issues promptly</p>
+      </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
+          <svg className="w-5 h-5 text-red-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          <span className="text-red-600">{error}</span>
+        </div>
+      )}
+
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Recipient</label>
+            <div className="relative">
+              <select
+                value={complaintTo}
+                onChange={handleInputChange(setComplaintTo)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+              >
+                <option value="">Select recipient</option>
+                <option value="principal">Principal</option>
+                <option value="vicePrincipal">Vice Principal</option>
+                <option value="hod">Head of Department (HOD)</option>
+                <option value="staff">Staff</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {complaintTo === 'hod' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+              <div className="relative">
+                <select
+                  value={department}
+                  onChange={handleInputChange(setDepartment)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                >
+                  <option value="">Select department</option>
+                  <option value="cse">Computer Science</option>
+                  <option value="ece">Electronics</option>
+                  <option value="mech">Mechanical</option>
+                  <option value="civil">Civil</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {complaintTo === 'staff' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Staff Name</label>
+              <input
+                type="text"
+                value={staffName}
+                onChange={handleInputChange(setStaffName)}
+                placeholder="Enter staff name"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <div className="relative">
+              <select
+                value={complainType}
+                onChange={handleInputChange(setComplainType)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+              >
+                <option value="">Select category</option>
+                <option value="financial">Financial</option>
+                <option value="holiday">Holiday</option>
+                <option value="internet issue">Internet Issue</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Message Type</label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setMessageType('Public')}
+                className={`p-3 rounded-lg border ${
+                  messageType === 'Public' 
+                    ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                    : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                }`}
+              >
+                Public
+              </button>
+              <button
+                type="button"
+                onClick={() => setMessageType('Private')}
+                className={`p-3 rounded-lg border ${
+                  messageType === 'Private' 
+                    ? 'border-purple-500 bg-purple-50 text-purple-700' 
+                    : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                }`}
+              >
+                Private
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+            <textarea
+              value={complaint}
+              onChange={handleInputChange(setComplaint)}
+              placeholder="Describe your concern in detail..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[150px]"
+              rows="4"
             />
-          </li>
-        )}
-        <li className="bg-gray-100 p-3 rounded-md">
-          <label htmlFor="complainType" className="font-medium">Related To</label>
-          <select
-            id="complainType"
-            value={complainType}
-            onChange={handleInputChange(setComplainType)}
-            className="w-full p-2 border-2 border-gray-300 rounded-md"
-          >
-            <option value="">Select</option>
-            <option value="financial">Financial Status</option>
-            <option value="holiday">Holiday</option>
-            <option value="internet issue">Internet Issue</option>
-          </select>
-        </li>
-        <li className="bg-gray-100 p-3 rounded-md">
-          <label htmlFor="messageType" className="font-medium">Message Type</label>
-          <select
-            id="messageType"
-            value={messageType}
-            onChange={handleInputChange(setMessageType)}
-            className="w-full p-2 border-2 border-gray-300 rounded-md"
-          >
-            <option value="public">Public</option>
-            <option value="private">Private</option>
-          </select>
-        </li>
-        <li className="bg-gray-100 p-3 rounded-md">
-          <label htmlFor="complaintMessage" className="font-medium">Write Message</label>
-          <textarea
-            id="complaintMessage"
-            value={complaint}
-            onChange={handleInputChange(setComplaint)}
-            placeholder="Describe your complaint or issue here..."
-            className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 mb-4"
-            rows="4"
-          />
+          </div>
+        </div>
+
+        <div className="mt-8">
           <button
             onClick={handleComplaintSubmit}
-            className="bg-red-500 text-white py-2 px-6 rounded-md hover:bg-red-600 transition"
             disabled={isLoading}
+            className="w-full py-3 px-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center"
           >
-            {isLoading ? 'Submitting...' : 'Submit Complaint'}
+            {isLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Submitting...
+              </>
+            ) : (
+              'Submit Concern'
+            )}
           </button>
-          {isSubmitted && <p className="mt-4 text-green-500">Your complaint has been submitted successfully!</p>}
-        </li>
-      </ul>
+
+          {isSubmitted && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center">
+              <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span className="text-green-600">Your concern has been submitted successfully!</span>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
 
 export default ComplaintForm;
+
+
+
+
+
+
+
+
+
+
+
+

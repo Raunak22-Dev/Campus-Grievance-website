@@ -9,10 +9,15 @@ const UserProfile = () => {
   const [userData, setUserData] = useState({ fullName: '', dob: '', gender: '', year: '', department: '', email: '', studentId: '' });
 
   useEffect(() => {
-    // Get saved data from localStorage if it exists
     const savedData = localStorage.getItem('userDetails');
     if (savedData) {
-      setUserData(JSON.parse(savedData));
+      const parsedData = JSON.parse(savedData);
+      // Migrate old studentID to studentId if needed
+      if (parsedData.studentID && !parsedData.studentId) {
+        parsedData.studentId = parsedData.studentID;
+        delete parsedData.studentID;
+      }
+      setUserData(parsedData);
     }
   }, []); // This will run only once when component is mounted
 
@@ -22,6 +27,11 @@ const UserProfile = () => {
   };
 
   const handleSave = () => {
+      // Validate studentId format
+  if (!/^\d{4,5}$/.test(userData.studentId)) {
+    alert("Please enter a valid Student ID (4-5 digits)");
+    return;
+  }
     // Store the user details in localStorage
     localStorage.setItem('userDetails', JSON.stringify(userData));
     updateUser(userData); // Assuming the updateUser updates the context/state
